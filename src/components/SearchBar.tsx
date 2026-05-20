@@ -2,7 +2,7 @@
 
 import { useState, type KeyboardEvent, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Loader2, Sparkles } from "lucide-react";
+import { Search, Loader2, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -69,13 +69,13 @@ export default function SearchBar({
   }
 
   return (
-    <div className={cn("relative w-full", large ? "max-w-2xl" : "max-w-xl")}>
+    <div className={cn("relative w-full", large ? "max-w-xl" : "max-w-lg")}>
       <div className="relative">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
           {isSearching ? (
-            <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+            <Loader2 className="h-4 w-4 text-muted-foreground/50 animate-spin" />
           ) : (
-            <Search className="h-5 w-5 text-muted-foreground" />
+            <Search className="h-4 w-4 text-muted-foreground/50" />
           )}
         </div>
         <Input
@@ -88,15 +88,15 @@ export default function SearchBar({
           }}
           onFocus={() => setShowSuggestions(true)}
           onKeyDown={handleKeyDown}
-          placeholder='Try "game like Omori"...'
+          placeholder='try "game like Omori"...'
           className={cn(
-            "w-full bg-secondary/50 border-border/50 text-foreground placeholder:text-muted-foreground/60",
-            "transition-all duration-300",
+            "w-full bg-white/[0.04] border-white/[0.08] text-foreground placeholder:text-muted-foreground/40",
+            "transition-all duration-200",
             large
-              ? "h-14 pl-12 pr-6 text-base rounded-2xl"
-              : "h-10 pl-10 pr-4 text-sm rounded-xl",
-            "focus-visible:ring-indigo-500/40 focus-visible:border-indigo-500/50",
-            "hover:border-border"
+              ? "h-12 pl-10 pr-4 text-base rounded-xl"
+              : "h-9 pl-9 pr-3 text-sm rounded-lg",
+            "focus-visible:ring-1 focus-visible:ring-purple-500/30 focus-visible:border-purple-500/40",
+            "hover:border-white/[0.12]"
           )}
         />
       </div>
@@ -104,10 +104,10 @@ export default function SearchBar({
       {showSuggestions && !query && (
         <div
           ref={suggestionsRef}
-          className="absolute top-full mt-2 w-full rounded-xl border border-border/50 bg-popover shadow-2xl shadow-indigo-500/5 overflow-hidden z-50"
+          className="absolute top-full mt-1 w-full rounded-lg border border-white/[0.08] bg-popover shadow-lg overflow-hidden z-50"
         >
-          <div className="px-3 py-2 text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-            Suggestions
+          <div className="px-3 py-1.5 text-[10px] font-medium text-muted-foreground/40 uppercase tracking-widest">
+            try
           </div>
           {suggestions.map((s, i) => (
             <button
@@ -118,13 +118,13 @@ export default function SearchBar({
               }}
               onMouseEnter={() => setSelectedSuggestion(i)}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 text-sm text-left transition-colors",
+                "w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left transition-colors",
                 selectedSuggestion === i
-                  ? "bg-indigo-500/10 text-indigo-300"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  ? "bg-white/[0.04] text-foreground"
+                  : "text-muted-foreground/70 hover:text-foreground hover:bg-white/[0.02]"
               )}
             >
-              <Sparkles className="h-3.5 w-3.5 shrink-0" />
+              <Zap className="h-3 w-3 shrink-0 text-purple-400/50" />
               {s}
             </button>
           ))}

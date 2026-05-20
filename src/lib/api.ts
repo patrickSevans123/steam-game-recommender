@@ -23,3 +23,7 @@ export async function getGame(id: number): Promise<Game> {
 export async function getSimilarGames(id: number, limit = 8): Promise<SearchResponse> {
   return fetchApi<SearchResponse>(`/api/games/${id}/similar`, { limit: String(limit) });
 }
+
+export async function getTrending(limit = 12): Promise<SearchResponse> {
+  return fetchApi<SearchResponse>("/api/trending", { limit: String(limit) });
+}
