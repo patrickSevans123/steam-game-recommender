@@ -24,7 +24,7 @@ export async function searchGames(
   limit = 20,
   filters?: SearchFilters,
 ): Promise<SearchResponse> {
-  const params: Record<string, string> = { q: query, limit: String(limit) };
+  const params: Record<string, string> = { q: query, limit: String(limit), rerank: "true" };
   if (filters?.genre) params.genre = filters.genre;
   if (filters?.platform) params.platform = filters.platform;
   if (filters?.price_min !== undefined) params.price_min = String(filters.price_min);
