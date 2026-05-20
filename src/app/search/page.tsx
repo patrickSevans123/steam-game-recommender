@@ -1,8 +1,8 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
-import { Search, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { Search, ArrowLeft, Loader2, AlertCircle, SlidersHorizontal, X } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import SearchBar from "@/components/SearchBar";
@@ -10,7 +10,13 @@ import GameGrid from "@/components/GameGrid";
 import Footer from "@/components/Footer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { searchGames } from "@/lib/api";
-import type { Game } from "@/lib/types";
+import type { Game, SearchFilters } from "@/lib/types";
+
+const GENRES = [
+  "Action", "Adventure", "Casual", "Early Access", "Free to Play",
+  "Indie", "Massively Multiplayer", "Racing", "RPG", "Simulation",
+  "Sports", "Strategy",
+];
 
 function SearchContent() {
   const searchParams = useSearchParams();
@@ -19,31 +25,42 @@ function SearchContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<SearchFilters>({});
 
-  useEffect(() => {
-    if (!query) return;
-    let cancelled = false;
+  const doSearch = useCallback(async (q: string, f: SearchFilters) => {
+    if (!q) return;
     setLoading(true);
     setError(null);
+    try {
+      const res = await searchGames(q, 20, f);
+      setGames(res.results.map((r) => r.game));
+      setTotal(res.total);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    searchGames(query)
-      .then((res) => {
-        if (!cancelled) {
-          setGames(res.results.map((r) => r.game));
-          setTotal(res.total);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+  useEffect(() => {
+    doSearch(query, filters);
+  }, [query, filters, doSearch]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [query]);
+  const toggleGenre = (g: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      genre: prev.genre === g ? undefined : g,
+    }));
+  };
+
+  const clearFilters = () => {
+    setFilters({});
+  };
+
+  const hasActiveFilters = Object.values(filters).some((v) => v !== undefined);
+
+  const filterCount = Object.values(filters).filter((v) => v !== undefined).length;
 
   return (
     <div className="relative flex min-h-screen flex-col bg-gradient-to-b from-background via-[#0b0a1e] to-background">
@@ -60,11 +77,119 @@ function SearchContent() {
             home
           </Link>
 
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-4">
             <div className="flex-1">
               <SearchBar initialQuery={query} />
             </div>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm border transition-colors ${
+                showFilters || hasActiveFilters
+                  ? "border-purple-500/30 text-purple-300 bg-purple-500/10"
+                  : "border-white/[0.06] text-muted-foreground/60 hover:border-white/[0.12]"
+              }`}
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              filters
+              {filterCount > 0 && (
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-500/20 text-[11px] text-purple-300">
+                  {filterCount}
+                </span>
+              )}
+            </button>
           </div>
+
+          {/* Filter panel */}
+          {showFilters && (
+            <div className="mb-6 p-4 rounded-xl border border-white/[0.06] bg-white/[0.02]">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider">genre</p>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-muted-foreground/40 hover:text-purple-300 transition-colors inline-flex items-center gap-1"
+                  >
+                    <X className="h-3 w-3" />
+                    clear
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {GENRES.map((g) => (
+                  <button
+                    key={g}
+                    onClick={() => toggleGenre(g)}
+                    className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${
+                      filters.genre === g
+                        ? "border-purple-500/40 text-purple-300 bg-purple-500/10"
+                        : "border-white/[0.06] text-muted-foreground/60 hover:border-white/[0.12]"
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between mt-4 mb-3">
+                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider">platform</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {["Windows", "Mac", "Linux"].map((p) => (
+                  <button
+                    key={p}
+                    onClick={() =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        platform: prev.platform === p ? undefined : p,
+                      }))
+                    }
+                    className={`px-3 py-1.5 rounded-lg text-xs border transition-colors ${
+                      filters.platform === p
+                        ? "border-purple-500/40 text-purple-300 bg-purple-500/10"
+                        : "border-white/[0.06] text-muted-foreground/60 hover:border-white/[0.12]"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-between mt-4 mb-3">
+                <p className="text-xs text-muted-foreground/60 uppercase tracking-wider">price</p>
+              </div>
+              <div className="flex gap-3 items-center">
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="min"
+                  value={filters.price_min ?? ""}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      price_min: e.target.value ? parseFloat(e.target.value) : undefined,
+                    }))
+                  }
+                  className="w-24 px-3 py-1.5 rounded-lg text-xs border border-white/[0.06] bg-white/[0.02] text-muted-foreground/80 placeholder:text-muted-foreground/30 outline-none focus:border-purple-500/40 transition-colors"
+                />
+                <span className="text-muted-foreground/30 text-xs">to</span>
+                <input
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  placeholder="max"
+                  value={filters.price_max ?? ""}
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      price_max: e.target.value ? parseFloat(e.target.value) : undefined,
+                    }))
+                  }
+                  className="w-24 px-3 py-1.5 rounded-lg text-xs border border-white/[0.06] bg-white/[0.02] text-muted-foreground/80 placeholder:text-muted-foreground/30 outline-none focus:border-purple-500/40 transition-colors"
+                />
+              </div>
+            </div>
+          )}
 
           {query && !loading && !error && (
             <p className="text-sm text-muted-foreground/60">

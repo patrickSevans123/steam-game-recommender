@@ -1,3 +1,10 @@
+export interface SearchFilters {
+  genre?: string;
+  platform?: string;
+  price_min?: number;
+  price_max?: number;
+}
+
 export interface Game {
   id: number;
   name: string;
