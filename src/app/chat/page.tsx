@@ -20,6 +20,7 @@ const SUGGESTED_PROMPTS = [
 interface Message {
   role: "user" | "assistant";
   content: string;
+  imageUrl?: string;
 }
 
 export default function ChatPage() {
@@ -58,15 +59,22 @@ export default function ChatPage() {
     }
   }, []);
 
-  const handleSend = async (query: string) => {
-    // Add user message to chat
-    setMessages(prev => [...prev, { role: "user", content: query }]);
+  const handleSend = async (query: string, image?: File | null) => {
+    // Generate image preview URL if image present
+    const imageUrl = image ? URL.createObjectURL(image) : undefined;
+
+    // Add user message to chat with optional image
+    setMessages(prev => [...prev, {
+      role: "user",
+      content: query || "(Image search)",
+      imageUrl
+    }]);
 
     // Show thinking indicator
     setIsThinking(true);
 
     // Send to API
-    await sendMessage(query);
+    await sendMessage(query, undefined, image);
   };
 
   // Hide thinking indicator when streaming starts
@@ -91,6 +99,17 @@ export default function ChatPage() {
       resetResponse();
     }
   }, [isStreaming, response, resetResponse]);
+
+  // Cleanup blob URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      messages.forEach((msg: Message) => {
+        if (msg.imageUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(msg.imageUrl);
+        }
+      });
+    };
+  }, [messages]);
 
   const handleNewChat = async () => {
     await clearSession();
@@ -172,6 +191,7 @@ export default function ChatPage() {
               key={index}
               role={message.role}
               content={message.content}
+              imageUrl={message.imageUrl}
             />
           ))}
 

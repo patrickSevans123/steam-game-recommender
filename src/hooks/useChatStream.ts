@@ -13,7 +13,7 @@ interface UseChatStreamReturn {
   error: string | null;
   sessionId: string | null;
   gamesRetrieved: number;
-  sendMessage: (query: string, filters?: ChatFilters) => Promise<void>;
+  sendMessage: (query: string, filters?: ChatFilters, image?: File | null) => Promise<void>;
   clearSession: () => Promise<void>;
   resetResponse: () => void;
 }
@@ -28,7 +28,11 @@ export function useChatStream(): UseChatStreamReturn {
   const [gamesRetrieved, setGamesRetrieved] = useState(0);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  const sendMessage = useCallback(async (query: string, filters?: ChatFilters) => {
+  const sendMessage = useCallback(async (
+    query: string,
+    filters?: ChatFilters,
+    image?: File | null
+  ) => {
     setIsStreaming(true);
     setResponse('');
     setError(null);
@@ -39,25 +43,38 @@ export function useChatStream(): UseChatStreamReturn {
       eventSourceRef.current.close();
     }
 
-    // Build request body
-    const body = {
-      query,
-      stream: true,
-      ...(sessionId && { session_id: sessionId }),
-      ...(filters?.genre && { genre: filters.genre }),
-      ...(filters?.platform && { platform: filters.platform }),
-      ...(filters?.price_min !== undefined && { price_min: filters.price_min }),
-      ...(filters?.price_max !== undefined && { price_max: filters.price_max }),
-    };
-
     try {
+      // Build FormData for multimodal support
+      const formData = new FormData();
+      formData.append('query', query);
+      formData.append('stream', 'true');
+
+      if (sessionId) {
+        formData.append('session_id', sessionId);
+      }
+
+      if (filters?.genre) {
+        formData.append('genre', filters.genre);
+      }
+      if (filters?.platform) {
+        formData.append('platform', filters.platform);
+      }
+      if (filters?.price_min !== undefined) {
+        formData.append('price_min', filters.price_min.toString());
+      }
+      if (filters?.price_max !== undefined) {
+        formData.append('price_max', filters.price_max.toString());
+      }
+
+      // Add image if present
+      if (image) {
+        formData.append('image', image);
+      }
+
       // Use fetch to POST, then create EventSource from response
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
+        body: formData,
       });
 
       if (!response.ok) {

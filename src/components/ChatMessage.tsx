@@ -8,9 +8,10 @@ interface ChatMessageProps {
   role: "user" | "assistant";
   content: string;
   isStreaming?: boolean;
+  imageUrl?: string;
 }
 
-export default function ChatMessage({ role, content, isStreaming }: ChatMessageProps) {
+export default function ChatMessage({ role, content, isStreaming, imageUrl }: ChatMessageProps) {
   const isUser = role === "user";
 
   // Parse game citations [Game Name](game_id) and make them clickable
@@ -88,6 +89,18 @@ export default function ChatMessage({ role, content, isStreaming }: ChatMessageP
             : "bg-gradient-to-br from-white/[0.06] to-white/[0.03] border border-white/[0.06]"
         )}
       >
+        {/* Image preview for user messages */}
+        {imageUrl && isUser && (
+          <div className="mb-3">
+            <img
+              src={imageUrl}
+              alt="Uploaded"
+              className="rounded-lg max-w-full h-auto max-h-48 object-contain border border-white/[0.08]"
+            />
+          </div>
+        )}
+
+        {/* Text content */}
         <div className={cn(
           "text-sm sm:text-base leading-relaxed",
           isUser ? "text-foreground/90" : "text-foreground/80"
