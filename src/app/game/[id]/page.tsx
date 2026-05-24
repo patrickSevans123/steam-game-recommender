@@ -65,6 +65,16 @@ export default function GameDetailPage({
     };
   }, [id]);
 
+  // Update document title when game loads
+  useEffect(() => {
+    if (game?.name) {
+      document.title = `${game.name} | steamrec`;
+    }
+    return () => {
+      document.title = "steamrec | game discovery";
+    };
+  }, [game]);
+
   if (loading) {
     return (
       <div className="relative flex min-h-screen flex-col bg-gradient-to-b from-background via-[#0b0a1e] to-background">
@@ -116,6 +126,7 @@ export default function GameDetailPage({
   const hasRatings = game.metacritic_score > 0 || game.steam_rating > 0;
 
   return (
+    <>
     <div className="relative flex min-h-screen flex-col bg-gradient-to-b from-background via-[#0b0a1e] to-background">
       <Header />
 
@@ -291,6 +302,7 @@ export default function GameDetailPage({
 
       <Footer />
     </div>
+    </>
   );
 }
 
