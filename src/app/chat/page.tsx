@@ -182,8 +182,13 @@ export default function ChatPage() {
                 <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 animate-pulse" />
               </div>
               <div className="max-w-[85%] sm:max-w-[75%] rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 bg-gradient-to-br from-white/[0.06] to-white/[0.03] border border-white/[0.06]">
-                <div className="text-sm sm:text-base text-muted-foreground/60 italic">
-                  Thinking...
+                <div className="text-sm sm:text-base text-muted-foreground/60 italic flex items-center gap-2 animate-pulse">
+                  Thinking
+                  <span className="flex gap-1">
+                    <span className="w-1 h-1 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                    <span className="w-1 h-1 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                    <span className="w-1 h-1 bg-muted-foreground/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  </span>
                 </div>
               </div>
             </div>
