@@ -50,3 +50,43 @@ export async function getSimilarGames(
 export async function getTrending(limit = 12): Promise<SearchResponse> {
   return fetchApi<SearchResponse>("/api/trending", { limit: String(limit) });
 }
+
+// Chat API
+
+export interface ChatResponse {
+  response: string;
+  session_id: string;
+  games_retrieved: number;
+}
+
+export async function sendChatMessage(
+  query: string,
+  sessionId?: string,
+  filters?: SearchFilters,
+): Promise<ChatResponse> {
+  const body = {
+    query,
+    stream: false,
+    ...(sessionId && { session_id: sessionId }),
+    ...(filters?.genre && { genre: filters.genre }),
+    ...(filters?.platform && { platform: filters.platform }),
+    ...(filters?.price_min !== undefined && { price_min: filters.price_min }),
+    ...(filters?.price_max !== undefined && { price_max: filters.price_max }),
+  };
+
+  const res = await fetch(`${API_BASE}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(`Chat API error: ${res.status}`);
+  return res.json();
+}
+
+export async function clearChatSession(sessionId: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/chat/session/${sessionId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) throw new Error(`Failed to clear session: ${res.status}`);
+}
